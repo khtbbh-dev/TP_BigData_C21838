@@ -5,29 +5,31 @@ do
 
 clear
 
-echo "======================================="
-echo " BIG DATA MANAGER "
-echo "======================================="
+echo "========================================"
+echo " BIG DATA MANAGER"
+echo "========================================"
 
-echo "1 - Gestion HDFS"
-echo "2 - Gestion MapReduce"
-echo "3 - Gestion Spark"
-echo "4 - Gestion Hive"
-echo "5 - Gestion Cluster"
-echo "6 - Rapports"
+echo "1  - Cluster Manager"
+echo "2  - HDFS Manager"
+echo "3  - MapReduce Manager"
+echo "4  - YARN Manager"
 
-echo "0 - Quitter"
+echo "5  - Spark Manager"
+echo "6  - Hive Manager"
 
-read -p "Choix : " CH
+echo "7  - Reporting"
+
+echo "0  - Quitter"
 
 case $CH in
 
 1) bash modules/hdfs.sh ;;
 2) bash modules/mapreduce.sh ;;
 3) bash modules/spark.sh ;;
-4) bash modules/hive.sh ;;
-5) bash modules/cluster.sh ;;
-6) bash modules/reports.sh ;;
+4) source modules/yarn.sh ;;
+5) source modules/spark.sh ;;
+6) source modules/hive.sh ;;
+7) source modules/reports.sh ;;
 
 0) exit ;;
 
