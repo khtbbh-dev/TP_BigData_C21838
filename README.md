@@ -1,3 +1,4 @@
+Ce repos contient les commandes utilisées dans les tps, un rapport de tp ainsi qu'un ensemble de scripts permettant l'automatomatisation des travaux pratiques sur Hadoop:
 # RAPPORT GLOBAL DES TRAVAUX PRATIQUES
 
 **Module :** Big Data Technologies  
