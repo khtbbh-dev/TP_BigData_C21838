@@ -6,35 +6,62 @@ do
 clear
 
 echo "========================================"
-echo " BIG DATA MANAGER"
+echo "      BIG DATA MANAGER    "
 echo "========================================"
+echo ""
+echo "1 - Cluster Manager"
+echo "2 - HDFS Manager"
+echo "3 - MapReduce Manager"
+echo "4 - YARN Manager"
+echo "5 - Spark Manager"
+echo "6 - Hive Manager"
+echo "7 - Reports Manager"
+echo ""
+echo "0 - Quitter"
+echo ""
 
-echo "1  - Cluster Manager"
-echo "2  - HDFS Manager"
-echo "3  - MapReduce Manager"
-echo "4  - YARN Manager"
-
-echo "5  - Spark Manager"
-echo "6  - Hive Manager"
-
-echo "7  - Reporting"
-
-echo "0  - Quitter"
+read -p "Choix : " CH
 
 case $CH in
 
-1) bash modules/hdfs.sh ;;
-2) bash modules/mapreduce.sh ;;
-3) bash modules/spark.sh ;;
-4) source modules/yarn.sh ;;
-5) source modules/spark.sh ;;
-6) source modules/hive.sh ;;
-7) source modules/reports.sh ;;
+1)
+    source modules/cluster.sh
+    ;;
 
-0) exit ;;
+2)
+    source modules/hdfs.sh
+    ;;
 
-*) echo "Choix invalide" ;;
+3)
+    source modules/mapreduce.sh
+    ;;
+
+4)
+    source modules/yarn.sh
+    ;;
+
+5)
+    source modules/spark.sh
+    ;;
+
+6)
+    source modules/hive.sh
+    ;;
+
+7)
+    source modules/reports.sh
+    ;;
+
+0)
+    exit
+    ;;
+
+*)
+    echo "Choix invalide"
+    sleep 2
+    ;;
+
 esac
 
-read -p "Entrée pour continuer..."
 done
+```
