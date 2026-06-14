@@ -1,0 +1,183 @@
+#!/bin/bash
+
+# ==========================================================
+# TP MAPREDUCE / YARN - MENU INTERACTIF
+# ==========================================================
+
+CLUSTER_DIR="./hadoop-docker"
+
+pause() {
+    read -p "Appuyez sur Entrée pour continuer..."
+}
+
+start_cluster() {
+    cd "$CLUSTER_DIR" || exit
+    docker compose up -d
+    docker ps
+    cd ..
+}
+
+stop_cluster() {
+    cd "$CLUSTER_DIR" || exit
+    docker compose down
+    cd ..
+}
+
+upload_dataset() {
+
+    read -p "Chemin du dataset : " FILE
+
+    if [ ! -f "$FILE" ]; then
+        echo "Fichier introuvable"
+        return
+    fi
+
+    FILE_NAME=$(basename "$FILE")
+
+    read -p "Dossier HDFS [/datasets] : " HDFS_DIR
+
+    HDFS_DIR=${HDFS_DIR:-/datasets}
+
+    docker cp "$FILE" namenode:/tmp/
+
+    docker exec namenode bash -c "
+        hdfs dfs -mkdir -p $HDFS_DIR
+        hdfs dfs -put -f /tmp/$FILE_NAME $HDFS_DIR/
+    "
+
+    echo "Upload terminé"
+}
+
+list_hdfs() {
+
+    read -p "Chemin HDFS : " DIR
+
+    docker exec namenode hdfs dfs -ls "$DIR"
+}
+
+run_wordcount() {
+
+    read -p "Fichier HDFS entrée : " INPUT
+
+    read -p "Dossier résultat HDFS : " OUTPUT
+
+    docker exec namenode bash -c "
+        hdfs dfs -rm -r -f $OUTPUT 2>/dev/null
+
+        hadoop jar \
+        /opt/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar \
+        wordcount \
+        $INPUT \
+        $OUTPUT
+    "
+
+    echo "WordCount terminé"
+}
+
+show_results() {
+
+    read -p "Dossier résultat HDFS : " OUTPUT
+
+    docker exec namenode \
+        hdfs dfs -cat $OUTPUT/part-r-00000 | head -50
+}
+
+download_results() {
+
+    read -p "Dossier résultat HDFS : " OUTPUT
+
+    read -p "Fichier local destination : " LOCAL
+
+    docker exec namenode \
+        hdfs dfs -getmerge $OUTPUT /tmp/result.txt
+
+    docker cp namenode:/tmp/result.txt "$LOCAL"
+}
+
+job_history() {
+
+    docker exec namenode \
+        mapred job -list all
+}
+
+yarn_apps() {
+
+    docker exec namenode \
+        yarn application -list
+}
+
+cluster_report() {
+
+    docker exec namenode \
+        hdfs dfsadmin -report
+
+    echo ""
+    echo "========== YARN =========="
+
+    docker exec namenode \
+        yarn node -list
+}
+
+remove_hdfs() {
+
+    read -p "Chemin HDFS à supprimer : " PATH_HDFS
+
+    docker exec namenode \
+        hdfs dfs -rm -r -f "$PATH_HDFS"
+}
+
+while true
+do
+
+clear
+
+echo "===================================="
+echo " TP MAPREDUCE / YARN "
+echo "===================================="
+
+echo "1  - Démarrer cluster"
+echo "2  - Arrêter cluster"
+
+echo "3  - Upload dataset"
+
+echo "4  - Lister HDFS"
+
+echo "5  - Exécuter WordCount"
+
+echo "6  - Afficher résultats"
+
+echo "7  - Télécharger résultats"
+
+echo "8  - Applications YARN"
+
+echo "9  - Historique jobs"
+
+echo "10 - Rapport cluster"
+
+echo "11 - Supprimer dossier HDFS"
+
+echo "0  - Quitter"
+
+read -p "Choix : " CH
+
+case $CH in
+
+1) start_cluster ;;
+2) stop_cluster ;;
+3) upload_dataset ;;
+4) list_hdfs ;;
+5) run_wordcount ;;
+6) show_results ;;
+7) download_results ;;
+8) yarn_apps ;;
+9) job_history ;;
+10) cluster_report ;;
+11) remove_hdfs ;;
+0) exit ;;
+*) echo "Choix invalide" ;;
+
+esac
+
+pause
+
+done

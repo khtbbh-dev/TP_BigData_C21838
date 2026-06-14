@@ -1,0 +1,19 @@
+#!/bin/bash
+
+echo " Démarrage du cluster Hadoop..."
+
+cd hadoop-docker || exit
+
+docker-compose up -d
+
+docker ps
+
+echo " Cluster démarré"
+
+#!/bin/bash
+
+echo " Vérification cluster..."
+
+docker ps
+
+echo " Ouvrir : http://localhost:9870"

@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - 9870:9870
+      - 9000:9000
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - namenode:/hadoop/dfs/name
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    restart: always
+    ports:
+      - 9864:9864
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode1:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    restart: always
+    ports:
+      - 9865:9864
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode2:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+volumes:
+  namenode:
+  datanode1:
+  datanode2:

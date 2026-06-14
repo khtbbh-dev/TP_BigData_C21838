@@ -1,0 +1,300 @@
+#!/bin/bash
+
+# ==========================================================
+
+# TP HDFS - MENU INTERACTIF GENERALISE
+
+# ==========================================================
+
+CLUSTER_DIR="./hadoop-docker"
+
+function pause() {
+read -p "Appuyez sur Entrée pour continuer..."
+}
+
+function start_cluster() {
+
+```
+echo "=== DEMARRAGE CLUSTER ==="
+
+cd "$CLUSTER_DIR" || exit
+
+docker compose up -d
+
+docker ps
+
+cd ..
+```
+
+}
+
+function stop_cluster() {
+
+```
+echo "=== ARRET CLUSTER ==="
+
+cd "$CLUSTER_DIR" || exit
+
+docker compose down
+
+cd ..
+```
+
+}
+
+function upload_file() {
+
+```
+echo ""
+read -p "Chemin complet du fichier : " FILE
+
+if [ ! -f "$FILE" ]; then
+    echo "Fichier introuvable"
+    return
+fi
+
+FILE_NAME=$(basename "$FILE")
+
+read -p "Dossier HDFS destination [/user/elkheit/data] : " HDFS_DIR
+
+HDFS_DIR=${HDFS_DIR:-/user/elkheit/data}
+
+docker cp "$FILE" namenode:/tmp/
+
+docker exec namenode bash -c "
+    hdfs dfs -mkdir -p $HDFS_DIR
+    hdfs dfs -put -f /tmp/$FILE_NAME $HDFS_DIR/
+"
+
+echo "Upload terminé"
+```
+
+}
+
+function list_hdfs() {
+
+```
+read -p "Dossier HDFS : " DIR
+
+docker exec namenode hdfs dfs -ls "$DIR"
+```
+
+}
+
+function block_info() {
+
+```
+read -p "Chemin complet du fichier HDFS : " FILE
+
+docker exec namenode hdfs fsck "$FILE" \
+    -files -blocks -locations
+```
+
+}
+
+function set_replication() {
+
+```
+read -p "Fichier HDFS : " FILE
+
+read -p "Facteur de réplication : " REP
+
+docker exec namenode \
+    hdfs dfs -setrep -w "$REP" "$FILE"
+
+echo "Réplication modifiée"
+```
+
+}
+
+function set_permissions() {
+
+```
+read -p "Fichier HDFS : " FILE
+
+read -p "Permissions (ex: 444, 600, 755) : " PERM
+
+docker exec namenode \
+    hdfs dfs -chmod "$PERM" "$FILE"
+
+echo "Permissions modifiées"
+```
+
+}
+
+function change_owner() {
+
+```
+read -p "Fichier HDFS : " FILE
+
+read -p "Utilisateur:Groupe : " OWNER
+
+docker exec namenode \
+    hdfs dfs -chown "$OWNER" "$FILE"
+```
+
+}
+
+function disk_usage() {
+
+```
+read -p "Chemin HDFS : " DIR
+
+docker exec namenode \
+    hdfs dfs -du -s -h "$DIR"
+```
+
+}
+
+function merge_files() {
+
+```
+read -p "Dossier source HDFS : " SRC
+
+read -p "Nom fichier fusionné : " OUT
+
+docker exec namenode \
+    hdfs dfs -getmerge "$SRC" "/tmp/$OUT"
+
+echo "Fusion créée dans /tmp/$OUT"
+```
+
+}
+
+function append_file() {
+
+```
+read -p "Fichier local : " LOCAL
+
+read -p "Fichier HDFS destination : " HDFSFILE
+
+FILE_NAME=$(basename "$LOCAL")
+
+docker cp "$LOCAL" namenode:/tmp/
+
+docker exec namenode \
+    hdfs dfs -appendToFile \
+    "/tmp/$FILE_NAME" \
+    "$HDFSFILE"
+```
+
+}
+
+function cluster_report() {
+
+```
+docker exec namenode \
+    hdfs dfsadmin -report
+```
+
+}
+
+function safe_mode() {
+
+```
+echo "1 - Entrer SafeMode"
+echo "2 - Quitter SafeMode"
+
+read -p "Choix : " C
+
+if [ "$C" = "1" ]; then
+
+    docker exec namenode \
+        hdfs dfsadmin -safemode enter
+
+else
+
+    docker exec namenode \
+        hdfs dfsadmin -safemode leave
+
+fi
+```
+
+}
+
+function datanode_failure() {
+
+```
+echo "1 - Stop DataNode1"
+echo "2 - Start DataNode1"
+
+read -p "Choix : " C
+
+if [ "$C" = "1" ]; then
+
+    docker stop datanode1
+
+else
+
+    docker start datanode1
+
+fi
+
+docker ps
+```
+
+}
+
+while true
+do
+
+clear
+
+echo "========================================"
+echo "TP HDFS - MENU PRINCIPAL"
+echo "========================================"
+
+echo "1  - Démarrer cluster"
+echo "2  - Arrêter cluster"
+
+echo "3  - Upload fichier"
+echo "4  - Lister HDFS"
+
+echo "5  - Informations blocs"
+
+echo "6  - Modifier réplication"
+
+echo "7  - Modifier permissions"
+
+echo "8  - Changer propriétaire"
+
+echo "9  - Utilisation disque"
+
+echo "10 - Fusion fichiers"
+
+echo "11 - Append fichier"
+
+echo "12 - Rapport cluster"
+
+echo "13 - Safe Mode"
+
+echo "14 - Simulation panne DataNode"
+
+echo "0  - Quitter"
+
+read -p "Choix : " CH
+
+case $CH in
+
+1. start_cluster ;;
+2. stop_cluster ;;
+3. upload_file ;;
+4. list_hdfs ;;
+5. block_info ;;
+6. set_replication ;;
+7. set_permissions ;;
+8. change_owner ;;
+9. disk_usage ;;
+10. merge_files ;;
+11. append_file ;;
+12. cluster_report ;;
+13. safe_mode ;;
+14. datanode_failure ;;
+15. exit ;;
+    *) echo "Choix invalide" ;;
+
+esac
+
+pause
+
+done
